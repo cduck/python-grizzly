@@ -2,20 +2,43 @@
 
 from grizzly import *
 from xbox_read import event_stream
+import numpy as np
+import sys
+import time
 
 g = Grizzly()
-g.set_mode(ControlMode.NO_PID, DriveMode.DRIVE_BRAKE)
-g.limit_acceleration(130)
+g.set_mode(ControlMode.POSITION_PID, DriveMode.DRIVE_BRAKE)
+
+#constants for RS555
+g.limit_acceleration(100)
 g.limit_current(15)
 
+
 inputs = event_stream(4000)
+
+target = 0
 for event in inputs:
     if event.key == "Y2":
-        throttle = int(event.value) / 328
-        g.set_target(throttle)
-        print(throttle)
+        target = target + int(event.value)/328
+        target = np.clip(target,0,2600)
+        #0 is minimum.  2600 is maximum
+        print("Target: " + str(target))
     if event.key == "A":
         print("Current: " + str(g.read_motor_current()) + "Encoder: " + str(g.read_encoder()))
+    if event.key == "B":
+        print("Grizzly position PID to target = " + str(target))    
+        g.set_target(target)
+    if event.key == "X":
+        print("Setting PID constants, use keyboard")
+        p = sys.stdin.readline()
+        p = float(p)
+        i = sys.stdin.readline()
+        i = float(i)
+        d = sys.stdin.readline()
+        d = float(d)
+        print("P " + str(p) + " I " + str(i) + " D " + str(d) )
+        g.init_pid(p,i,d)
+        time.sleep(1.0)
 
 
 # Appendix: Keys
