@@ -20,14 +20,18 @@ target = 0
 for event in inputs:
     if event.key == "Y2":
         target = target + int(event.value)/328
-        target = np.clip(target,0,2600)
+        target = np.clip(target,0,2500)
         #0 is minimum.  2600 is maximum
         print("Target: " + str(target))
     if event.key == "A":
         print("Current: " + str(g.read_motor_current()) + "Encoder: " + str(g.read_encoder()))
     if event.key == "B":
         print("Grizzly position PID to target = " + str(target))    
-        g.set_target(target)
+        ####g.set_target(target/2.0**16)
+        ####fixed_set = int(setpoint * (2 ** 16))
+        buf = [cast_to_byte(target >> 8 * i) for i in range(5)]
+        print 'Buf=',buf
+        g.set_register(Addr.Speed, buf)
     if event.key == "X":
         print("Setting PID constants, use keyboard")
         p = sys.stdin.readline()
